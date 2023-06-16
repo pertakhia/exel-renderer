@@ -1,0 +1,227 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>exel render</title>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/file-saver/dist/FileSaver.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+
+      .header {
+        background-color: #333;
+        color: #fff;
+        padding: 20px;
+        text-align: center;
+      }
+
+      h1 {
+        margin: 0;
+      }
+      .container {
+        margin: 20px;
+        padding: 20px;
+        background-color: #f2f2f2;
+        border-radius: 4px;
+      }
+
+      .title-content {
+        text-align: center;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        font-size: 20px;
+        font-weight: bold;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
+
+      th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+      }
+
+      tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+
+      tr:hover {
+        background-color: #ddd;
+      }
+
+      .button-container {
+        margin-top: 10px;
+        margin-bottom: 10px;
+      }
+
+      .download-button {
+        background-color: #4caf50;
+        color: white;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+      }
+
+      .add-column-button {
+        background-color: #008cba;
+        color: white;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+      }
+      .add-row-button {
+        background-color: #008cba;
+        color: white;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        margin-left: 10px;
+        margin-right: 10px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Excel Table</h1>
+      </div>
+
+      <div class="title-content">
+        <h2>Data Table</h2>
+      </div>
+
+      <table id="excelTable">
+        <thead>
+          <tr></tr>
+        </thead>
+        <tbody>
+          <!-- Table data will be populated dynamically -->
+        </tbody>
+      </table>
+
+      <div class="button-container">
+        <button class="add-column-button" onclick="addColumn()">
+          Add Column
+        </button>
+        <button class="add-row-button" onclick="addRow()">Add Row</button>
+        <button class="download-button" onclick="downloadExcelFile()">
+          Download Excel File
+        </button>
+      </div>
+    </div>
+    <script>
+      const tableBody = document.querySelector("#excelTable tbody")
+      let data = []
+
+      function populateTable() {
+        const tableBody = document.querySelector("#excelTable tbody")
+        tableBody.innerHTML = ""
+
+        data.forEach(row => {
+          const tableRow = document.createElement("tr")
+          row.forEach(cellData => {
+            const tableCell = document.createElement("td")
+            tableCell.textContent = cellData
+            tableRow.appendChild(tableCell)
+          })
+          tableBody.appendChild(tableRow)
+        })
+      }
+
+      function addColumn() {
+        const columnName = prompt("Enter column name:")
+        if (columnName) {
+          // Update the table header
+          const tableHeader = document.querySelector("#excelTable thead tr")
+          const newHeaderCell = document.createElement("th")
+          newHeaderCell.textContent = columnName
+          tableHeader.appendChild(newHeaderCell)
+
+          // Update the table data
+          data.forEach((row, rowIndex) => {
+            const cellData = prompt(`Enter ${columnName} for ${row[0]}:`)
+            data[rowIndex].push(cellData)
+          })
+
+          populateTable()
+        }
+      }
+
+      function addRow() {
+        const newRowData = []
+
+        // Prompt for values for each column
+        const tableHeader = document.querySelector("#excelTable thead tr")
+        for (let i = 0; i < tableHeader.childElementCount; i++) {
+          const columnName = tableHeader.children[i].textContent
+          const cellData = prompt(`Enter ${columnName} for the new row:`)
+          newRowData.push(cellData || "")
+        }
+
+        data.push(newRowData)
+        populateTable()
+      }
+
+      populateTable()
+
+      function downloadExcelFile() {
+        // Define the data for the Excel file
+        if (data.length === 0) {
+          alert("No data to download, please add data to the table")
+          return
+        }
+
+        // Create a new Excel workbook
+        const workbook = XLSX.utils.book_new()
+        const worksheet = XLSX.utils.aoa_to_sheet(data)
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1")
+
+        // Convert the workbook to a Blob
+        const excelBuffer = XLSX.write(workbook, {
+          bookType: "xlsx",
+          type: "array",
+        })
+        const blob = new Blob([excelBuffer], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        })
+
+        // Create a download link for the Blob
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = "data.xlsx"
+        a.click()
+
+        // Cleanup
+        URL.revokeObjectURL(url)
+      }
+    </script>
+  </body>
+</html>
